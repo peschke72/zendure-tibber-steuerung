@@ -10,14 +10,12 @@ def run():
 
     print("Starte Tibber-Preisabfrage...")
 
-    # Tibber GraphQL API Abfrage für den aktuellen Preis
     url = "https://api.tibber.com/v1-beta/gql"
     headers = {
         "Authorization": f"Bearer {tibber_token}",
         "Content-Type": "application/json"
     }
     
-    # GraphQL Query für den aktuellen Strompreis
     query = """
     {
       viewer {
@@ -39,11 +37,19 @@ def run():
         response = requests.post(url, json={'query': query}, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            # Preis aus der Antwort extrahieren
             current_price = data['data']['viewer']['homes'][0]['currentSubscription']['priceInfo']['current']['total']
-            print(f"Aktueller Tibber-Strompreis: {current_price * 100:.2f} Cent / kWh")
+            preis_cent = current_price * 100
+            print(f"Aktueller Tibber-Strompreis: {preis_cent:.2f} Cent / kWh")
             
-            # Hier bauen wir im nächsten Schritt die Logik für deinen Zendure-Speicher ein!
+            # Beispiel-Schwelle: Wenn der Strompreis unter 25 Cent liegt, lade den Speicher
+            preis_grenze = 25.0
+            
+            if preis_cent <= preis_grenze:
+                print(f"Preis ({preis_cent:.2f} Ct) ist unter der Grenze von {preis_grenze} Ct. Sende Ladebefehl an Zendure...")
+                # Hier wird später der Zendure-Befehl ausgelöst
+            else:
+                print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch. Keine Aktion erforderlich.")
+                
         else:
             print(f"Fehler bei der API-Abfrage: Statuscode {response.status_code}")
     except Exception as e:
