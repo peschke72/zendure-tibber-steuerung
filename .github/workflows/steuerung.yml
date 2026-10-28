@@ -1,0 +1,26 @@
+name: Zendure Tibber Steuerung
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Läuft jede volle Stunde automatisch
+  workflow_dispatch:      # Erlaubt auch einen manuellen Start per Knopfdruck
+
+jobs:
+    run-script:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Python einrichten
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.10'
+
+            - name: Abhängigkeiten installieren
+              run: pip install requests
+
+            - name: Skript ausführen
+              run: python main.py
+              env:
+                  TIBBER_TOKEN: ${{ secrets.TIBBER_TOKEN }}
