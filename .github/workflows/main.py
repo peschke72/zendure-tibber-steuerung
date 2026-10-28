@@ -41,14 +41,13 @@ def run():
             preis_cent = current_price * 100
             print(f"Aktueller Tibber-Strompreis: {preis_cent:.2f} Cent / kWh")
             
-            # Beispiel-Schwelle: Wenn der Strompreis unter 25 Cent liegt, lade den Speicher
             preis_grenze = 25.0
             
             if preis_cent <= preis_grenze:
-                print(f"Preis ({preis_cent:.2f} Ct) ist unter der Grenze von {preis_grenze} Ct. Sende Ladebefehl an Zendure...")
-                # Hier wird später der Zendure-Befehl ausgelöst
+                print(f"Preis ({preis_cent:.2f} Ct) ist unter der Grenze von {preis_grenze} Ct. Speicher soll geladen werden.")
+                # Hier binden wir im nächsten Schritt die Zendure-API-Befehle ein
             else:
-                print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch. Keine Aktion erforderlich.")
+                print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch. Keine Lade-Aktion erforderlich.")
                 
         else:
             print(f"Fehler bei der API-Abfrage: Statuscode {response.status_code}")
