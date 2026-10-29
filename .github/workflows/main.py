@@ -10,7 +10,7 @@ def run():
         print("Fehler: TIBBER_TOKEN ist nicht gesetzt!")
         return
 
-    print("Starte Tibber-Abfrage (Preis & Pulse Live-Daten)...")
+    print("Starte Tibber-Preisabfrage...")
 
     url = "https://api.tibber.com/v1-beta/gql"
     headers = {
@@ -18,7 +18,7 @@ def run():
         "Content-Type": "application/json"
     }
     
-    # Erweiterte GraphQL-Abfrage für Strompreis UND aktuellen Pulse-Verbrauch
+    # Stabile Abfrage für den aktuellen Strompreis
     query = """
     {
       viewer {
@@ -31,11 +31,6 @@ def run():
               }
             }
           }
-          liveMeasurement {
-            power
-            lastMeterConsumption
-            accumulatedConsumption
-          }
         }
       }
     }
@@ -45,20 +40,9 @@ def run():
         response = requests.post(url, json={'query': query}, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            home = data['data']['viewer']['homes'][0]
-            
-            # Preis auslesen
-            current_price = home['currentSubscription']['priceInfo']['current']['total']
+            current_price = data['data']['viewer']['homes'][0]['currentSubscription']['priceInfo']['current']['total']
             preis_cent = current_price * 100
             print(f"Aktueller Tibber-Strompreis: {preis_cent:.2f} Cent / kWh")
-            
-            # Pulse Live-Verbrauch auslesen (falls verfügbar)
-            live_meas = home.get('liveMeasurement')
-            if live_meas and live_meas.get('power') is not None:
-                current_power = live_meas['power']
-                print(f"Aktueller Wohnungslast (Pulse): {current_power} Watt")
-            else:
-                print("Hinweis: Momentan keine Live-Daten vom Tibber Pulse empfangbar.")
             
             preis_grenze = 25.0
             
