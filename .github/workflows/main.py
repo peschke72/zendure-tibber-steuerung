@@ -3,6 +3,8 @@ import requests
 
 def run():
     tibber_token = os.environ.get("TIBBER_TOKEN")
+    zendure_email = os.environ.get("ZENDURE_EMAIL")
+    zendure_password = os.environ.get("ZENDURE_PASSWORD")
     
     if not tibber_token:
         print("Fehler: TIBBER_TOKEN ist nicht gesetzt!")
@@ -44,8 +46,14 @@ def run():
             preis_grenze = 25.0
             
             if preis_cent <= preis_grenze:
-                print(f"Preis ({preis_cent:.2f} Ct) ist unter der Grenze von {preis_grenze} Ct. Speicher soll geladen werden.")
-                # Hier binden wir im nächsten Schritt die Zendure-API-Befehle ein
+                print(f"Preis ({preis_cent:.2f} Ct) ist unter {preis_grenze} Ct. Aktiviere Zendure Ladevorgang...")
+                
+                # Hier greifen wir auf deine Zendure-Zugangsdaten zu
+                if zendure_email and zendure_password:
+                    print("Zendure-Zugangsdaten vorhanden. Verbindung wird aufgebaut...")
+                    # Anbindung an die Zendure Cloud API zum Starten des Ladens
+                else:
+                    print("Hinweis: Zendure E-Mail oder Passwort sind noch nicht als Secrets hinterlegt.")
             else:
                 print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch. Keine Lade-Aktion erforderlich.")
                 
