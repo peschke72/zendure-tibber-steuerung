@@ -101,7 +101,12 @@
     <!-- Live-Werte -->
     <div class="card">
         <div class="label">Aktueller Strompreis</div>
-        <div class="value highlight" id="tibber-price">Lade Daten...</div>
+        <div class="value highlight" id="tibber-price">-- ct/kWh</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Aktueller Hausverbrauch (Live)</div>
+        <div class="value" id="tibber-power">-- W</div>
         <div class="label" style="margin-top: 8px;">Status: <span id="status-display" style="color:#fff;">Verbinde...</span></div>
     </div>
 
@@ -143,10 +148,12 @@
             })
             .then(data => {
                 document.getElementById('tibber-price').innerText = data.price + " ct/kWh";
+                document.getElementById('tibber-power').innerText = data.power + " W";
                 document.getElementById('status-display').innerText = data.status;
             })
             .catch(error => {
                 document.getElementById('tibber-price').innerText = "-- ct/kWh";
+                document.getElementById('tibber-power').innerText = "-- W";
                 document.getElementById('status-display').innerText = "Warte auf Skript-Lauf...";
             });
     }
