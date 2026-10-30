@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 
 def run():
@@ -18,7 +19,6 @@ def run():
         "Content-Type": "application/json"
     }
     
-    # Stabile Abfrage für den aktuellen Strompreis
     query = """
     {
       viewer {
@@ -44,11 +44,19 @@ def run():
             preis_cent = current_price * 100
             print(f"Aktueller Tibber-Strompreis: {preis_cent:.2f} Cent / kWh")
             
+            # JSON-Daten für die Weboberfläche schreiben
+            web_data = {
+                "price": round(preis_cent, 2),
+                "status": "Aktiv (Verbunden)",
+                "updated": "Gerade eben"
+            }
+            with open("data.json", "w", encoding="utf-8") as f:
+                json.dump(web_data, f)
+            print("data.json erfolgreich aktualisiert.")
+
             preis_grenze = 25.0
-            
             if preis_cent <= preis_grenze:
                 print(f"Preis ({preis_cent:.2f} Ct) ist unter {preis_grenze} Ct. Aktiviere Zendure Ladevorgang...")
-                
                 if zendure_email and zendure_password:
                     print("Zendure-Zugangsdaten vorhanden. Verbindung wird aufgebaut...")
                 else:
