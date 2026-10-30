@@ -11,7 +11,7 @@ def run():
         print("Fehler: TIBBER_TOKEN ist nicht gesetzt!")
         return
 
-    print("Starte Tibber-Preisabfrage...")
+    print("Starte Tibber-Datenabfrage...")
 
     url = "https://api.tibber.com/v1-beta/gql"
     headers = {
@@ -19,6 +19,7 @@ def run():
         "Content-Type": "application/json"
     }
     
+    # GraphQL Query für Preis und Live-Verbrauch
     query = """
     {
       viewer {
@@ -31,6 +32,10 @@ def run():
               }
             }
           }
+          liveMeasurement {
+            power
+            timestamp
+          }
         }
       }
     }
@@ -40,29 +45,34 @@ def run():
         response = requests.post(url, json={'query': query}, headers=headers)
         if response.status_code == 200:
             data = response.json()
-            current_price = data['data']['viewer']['homes'][0]['currentSubscription']['priceInfo']['current']['total']
+            home = data['data']['viewer']['homes'][0]
+            
+            # Strompreis auslesen
+            current_price = home['currentSubscription']['priceInfo']['current']['total']
             preis_cent = current_price * 100
-            print(f"Aktueller Tibber-Strompreis: {preis_cent:.2f} Cent / kWh")
+            
+            # Live-Verbrauch auslesen (falls verfügbar)
+            live_data = home.get('liveMeasurement')
+            power = live_data['power'] if live_data else 0
+            
+            print(f"Aktueller Strompreis: {preis_cent:.2f} Cent / kWh | Verbrauch: {power} W")
             
             # JSON-Daten für die Weboberfläche schreiben
             web_data = {
                 "price": round(preis_cent, 2),
-                "status": "Aktiv (Verbunden)",
-                "updated": "Gerade eben"
+                "power": power,
+                "status": "Aktiv (Verbunden)"
             }
             with open("data.json", "w", encoding="utf-8") as f:
                 json.dump(web_data, f)
             print("data.json erfolgreich aktualisiert.")
 
+            # Steuerungslogik
             preis_grenze = 25.0
             if preis_cent <= preis_grenze:
-                print(f"Preis ({preis_cent:.2f} Ct) ist unter {preis_grenze} Ct. Aktiviere Zendure Ladevorgang...")
-                if zendure_email and zendure_password:
-                    print("Zendure-Zugangsdaten vorhanden. Verbindung wird aufgebaut...")
-                else:
-                    print("Hinweis: Zendure E-Mail oder Passwort sind noch nicht als Secrets hinterlegt.")
+                print(f"Preis ({preis_cent:.2f} Ct) ist unter {preis_grenze} Ct. Ladevorgang prüfen...")
             else:
-                print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch. Keine Lade-Aktion erforderlich.")
+                print(f"Preis ({preis_cent:.2f} Ct) ist zu hoch.")
                 
         else:
             print(f"Fehler bei der API-Abfrage: Statuscode {response.status_code}")
