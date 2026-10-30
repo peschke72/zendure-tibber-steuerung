@@ -42,6 +42,9 @@
             color: #fff;
             margin-top: 5px;
         }
+        .highlight {
+            color: #ffeb3b;
+        }
         .input-group {
             margin-bottom: 12px;
         }
@@ -83,12 +86,6 @@
             background: #f44336;
             color: #fff;
         }
-        #status-msg {
-            margin-top: 10px;
-            font-size: 0.85rem;
-            text-align: center;
-            color: #ffeb3b;
-        }
     </style>
 </head>
 <body>
@@ -96,12 +93,18 @@
 <div class="container">
     <h2>⚡ Zendure & Tibber</h2>
     
+    <!-- Live-Werte -->
     <div class="card">
-        <div class="label">Aktueller Status</div>
-        <div class="value" id="status-display">Bereit</div>
-        <div id="status-msg"></div>
+        <div class="label">Aktueller Strompreis</div>
+        <div class="value highlight" id="tibber-price">-- ct/kWh</div>
     </div>
 
+    <div class="card">
+        <div class="label">Aktueller Hausverbrauch (Live)</div>
+        <div class="value" id="tibber-power">-- W</div>
+    </div>
+
+    <!-- Steuerung -->
     <div class="card">
         <div class="input-group">
             <label for="price-limit">Max. Preisgrenze (Ct/kWh):</label>
@@ -133,19 +136,14 @@
         const limit = document.getElementById('price-limit').value;
         const start = document.getElementById('time-start').value;
         const end = document.getElementById('time-end').value;
-        
-        document.getElementById('status-msg').innerText = "Einstellungen gespeichert!";
-        alert("Werte übernommen:\nMax. Preis: " + limit + " Ct\nZeitfenster: " + start + " bis " + end + " Uhr");
-        // Hier binden wir gleich die GitHub-API an, damit die Werte ins Repo geschrieben werden.
+        alert("Einstellungen gespeichert!\nMax. Preis: " + limit + " Ct\nZeitfenster: " + start + " bis " + end + " Uhr");
     }
 
     function triggerAction(action) {
         if(action === 'FORCE_CHARGE') {
-            document.getElementById('status-msg').innerText = "Befehl: Sofort laden aktiv";
-            alert("Manueller Befehl gesendet: Speicher wird geladen!");
+            alert("Befehl gesendet: Speicher wird geladen!");
         } else {
-            document.getElementById('status-msg').innerText = "Befehl: Normaler Modus";
-            alert("Manueller Befehl gesendet: Normalbetrieb.");
+            alert("Befehl gesendet: Normalbetrieb.");
         }
     }
 </script>
