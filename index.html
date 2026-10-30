@@ -86,6 +86,11 @@
             background: #f44336;
             color: #fff;
         }
+        #status-msg {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #4caf50;
+        }
     </style>
 </head>
 <body>
@@ -96,12 +101,8 @@
     <!-- Live-Werte -->
     <div class="card">
         <div class="label">Aktueller Strompreis</div>
-        <div class="value highlight" id="tibber-price">-- ct/kWh</div>
-    </div>
-
-    <div class="card">
-        <div class="label">Aktueller Hausverbrauch (Live)</div>
-        <div class="value" id="tibber-power">-- W</div>
+        <div class="value highlight" id="tibber-price">Lade Daten...</div>
+        <div class="label" style="margin-top: 8px;">Status: <span id="status-display" style="color:#fff;">Verbinde...</span></div>
     </div>
 
     <!-- Steuerung -->
@@ -122,6 +123,7 @@
         </div>
 
         <button class="btn btn-primary" onclick="saveSettings()">Einstellungen speichern</button>
+        <div id="status-msg"></div>
     </div>
 
     <div class="card">
@@ -132,18 +134,41 @@
 </div>
 
 <script>
+    // Live-Daten aus der data.json abrufen
+    function loadLiveData() {
+        fetch('data.json?t=' + new Date().getTime())
+            .then(response => {
+                if (!response.ok) throw new Error("Keine Daten gefunden");
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('tibber-price').innerText = data.price + " ct/kWh";
+                document.getElementById('status-display').innerText = data.status;
+            })
+            .catch(error => {
+                document.getElementById('tibber-price').innerText = "-- ct/kWh";
+                document.getElementById('status-display').innerText = "Warte auf Skript-Lauf...";
+            });
+    }
+
+    // Beim Laden und alle 60 Sekunden aktualisieren
+    loadLiveData();
+    setInterval(loadLiveData, 60000);
+
     function saveSettings() {
         const limit = document.getElementById('price-limit').value;
         const start = document.getElementById('time-start').value;
         const end = document.getElementById('time-end').value;
-        alert("Einstellungen gespeichert!\nMax. Preis: " + limit + " Ct\nZeitfenster: " + start + " bis " + end + " Uhr");
+        
+        document.getElementById('status-msg').innerText = "Einstellungen lokal übernommen!";
+        alert("Werte übernommen:\nMax. Preis: " + limit + " Ct\nZeitfenster: " + start + " bis " + end + " Uhr");
     }
 
     function triggerAction(action) {
         if(action === 'FORCE_CHARGE') {
-            alert("Befehl gesendet: Speicher wird geladen!");
+            alert("Manueller Befehl gesendet: Speicher wird geladen!");
         } else {
-            alert("Befehl gesendet: Normalbetrieb.");
+            alert("Manueller Befehl gesendet: Normalbetrieb.");
         }
     }
 </script>
