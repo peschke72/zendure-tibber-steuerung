@@ -1,6 +1,7 @@
 import os
 import json
-import requests
+import urllib.request
+import urllib.error
 import sys
 
 def run():
@@ -35,22 +36,24 @@ def run():
               }
             }
             """
-            response = requests.post(url, json={'query': query}, headers=headers)
-            print(f"API Status Code: {response.status_code}")
-            if response.status_code == 200:
-                result = response.json()
-                homes = result.get('data', {}).get('viewer', {}).get('homes', [])
-                if homes:
-                    current_price = homes[0]['currentSubscription']['priceInfo']['current']['total']
-                    price_val = round(current_price * 100, 2)
-                    status_text = "Aktiv (Tibber Live)"
-                    print(f"Preis erfolgreich abgerufen: {price_val} Ct")
-                else:
-                    status_text = "Kein Zuhause gefunden"
-            else:
-                status_text = f"API Fehler {response.status_code}"
+            req_data = json.dumps({"query": query}).encode("utf-8")
+            req = urllib.request.Request(url, data=req_data, headers=headers, method="POST")
+            
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    if response.status == 200:
+                        res_body = response.read().decode("utf-8")
+                        result = json.loads(res_body)
+                        homes = result.get('data', {}).get('viewer', {}).get('homes', [])
+                        if homes:
+                            current_price = homes[0]['currentSubscription']['priceInfo']['current']['total']
+                            price_val = round(current_price * 100, 2)
+                            status_text = "Aktiv (Tibber Live)"
+                            print(f"Preis erfolgreich abgerufen: {price_val} Ct")
+            except urllib.error.URLError as e:
+                print(f"Netzwerkfehler bei Tibber: {e}")
+                status_text = "API-Fehler"
 
-        # In jedem Fall die data.json schreiben
         web_data = {
             "price": price_val,
             "power": 0,
@@ -63,12 +66,10 @@ def run():
 
     except Exception as e:
         print(f"Fehler abgefangen: {e}")
-        # Fallback-Datei schreiben, damit die App nicht leer bleibt
         web_data = {"price": 24.50, "power": 0, "status": "Notfall-Fallback"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
 
-    # Garantiert erfolgreicher Exit-Code für GitHub Actions
     sys.exit(0)
 
 if __name__ == "__main__":
