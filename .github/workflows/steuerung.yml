@@ -12,10 +12,25 @@ jobs:
       - name: Repository auschecken
         uses: actions/checkout@v4
 
+      - name: Ordnerstruktur prüfen (Debug)
+        run: |
+          pwd
+          ls -la
+          find . -name "main.py"
+
       - name: Python einrichten
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Hauptskript ausführen
-        run: python main.py
+        run: |
+          if [ -f "main.py" ]; then
+            python main.py
+          elif [ -f "zendure-tibber-steuerung/main.py" ]; then
+            cd zendure-tibber-steuerung
+            python main.py
+          else
+            echo "Fehler: main.py nirgends gefunden!"
+            exit 1
+          fi
