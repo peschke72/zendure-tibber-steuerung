@@ -26,10 +26,8 @@ jobs:
           ZENDURE_PASSWORD: ${{ secrets.ZENDURE_PASSWORD }}
         run: python main.py
 
-      - name: data.json committen und pushen
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-          git add data.json
-          git commit -m "Update data.json automatisch [skip ci]" || echo "Keine Änderungen zum Committen"
-          git push origin main || echo "Push fehlgeschlagen, überspringe"
+      - name: Änderungen automatisch committen
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update data.json automatisch [skip ci]"
+          file_pattern: data.json
