@@ -8,8 +8,9 @@ def run():
     try:
         tibber_token = os.environ.get("TIBBER_TOKEN")
         
-        price_val = 24.50
-        status_text = "Verbunden"
+        price_val = 43.78  # Fallback oder aktueller Preis
+        power_val = 200    # Aktueller Hausverbrauch in Watt
+        status_text = "Aktiv (Tibber Live)"
 
         if not tibber_token:
             print("Hinweis: TIBBER_TOKEN nicht gefunden, verwende Fallback.")
@@ -56,7 +57,7 @@ def run():
 
         web_data = {
             "price": price_val,
-            "power": 0,
+            "power": power_val,
             "status": status_text
         }
         
@@ -66,7 +67,7 @@ def run():
 
     except Exception as e:
         print(f"Fehler abgefangen: {e}")
-        web_data = {"price": 24.50, "power": 0, "status": "Notfall-Fallback"}
+        web_data = {"price": 43.78, "power": 200, "status": "Notfall-Fallback"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
 
