@@ -9,18 +9,19 @@ def run():
         tibber_token = os.environ.get("TIBBER_TOKEN")
         
         price_val = 43.78  
-        power_val = 200    # Stabiler Standardwert für den Verbrauch
+        power_val = 200    # Standardwert als Fallback
         status_text = "Aktiv (Stabil)"
 
         if not tibber_token:
             print("TIBBER_TOKEN nicht gefunden, verwende Fallback.")
         else:
-            print("Starte sichere Tibber-Abfrage...")
+            print("Starte Tibber-Abfrage...")
             url = "https://api.tibber.com/v1-beta/gql"
             headers = {
                 "Authorization": f"Bearer {tibber_token}",
                 "Content-Type": "application/json"
             }
+            # Abfrage für Preis und Live-Verbrauch mit Fehlertoleranz
             query = """
             {
               viewer {
@@ -31,6 +32,9 @@ def run():
                         total
                       }
                     }
+                  }
+                  liveMeasurement {
+                    power
                   }
                 }
               }
@@ -46,14 +50,22 @@ def run():
                         result = json.loads(res_body)
                         homes = result.get('data', {}).get('viewer', {}).get('homes', [])
                         if homes:
+                            # Preis auslesen
                             price_info = homes[0].get('currentSubscription', {}).get('priceInfo', {}).get('current', {})
-                            if price_info and 'total' in price_info:
+                            if price_info and price_info.get('total') is not None:
                                 price_val = round(price_info['total'] * 100, 2)
+                            
+                            # Live-Verbrauch sicher auslesen (falls vorhanden)
+                            live_data = homes[0].get('liveMeasurement')
+                            if live_data and live_data.get('power') is not None:
+                                power_val = live_data['power']
                                 status_text = "Aktiv (Tibber Live)"
-                                print(f"Preis erfolgreich abgerufen: {price_val} Ct")
+                            
+                            print(f"Abruf erfolgreich: {price_val} Ct, {power_val} W")
             except Exception as api_err:
-                print(f"Tibber API Hinweis: {api_err}")
+                print(f"Tibber API Hinweis (verwende Fallback): {api_err}")
 
+        # Daten sicher in die data.json schreiben
         web_data = {
             "price": price_val,
             "power": power_val,
