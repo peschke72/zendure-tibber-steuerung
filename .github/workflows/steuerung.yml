@@ -26,10 +26,14 @@ jobs:
           TIBBER_TOKEN: ${{ secrets.TIBBER_TOKEN }}
         run: python main.py
 
+      - name: Git-Konflikte vorbeugen (Pull Rebase)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase || echo "Kein Rebase nötig oder erfolgreich"
+
       - name: data.json automatisch committen und pushen
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update data.json automatisch [skip ci]"
           file_pattern: data.json
-          # Zieht Änderungen vom Remote-Server vor dem Push automatisch ein:
-          push_options: '--force'
