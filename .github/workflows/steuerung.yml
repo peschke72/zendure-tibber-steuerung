@@ -24,10 +24,13 @@ jobs:
           TIBBER_TOKEN: ${{ secrets.TIBBER_TOKEN }}
           ZENDURE_EMAIL: ${{ secrets.ZENDURE_EMAIL }}
           ZENDURE_PASSWORD: ${{ secrets.ZENDURE_PASSWORD }}
-        run: python main.py
+        run: |
+          cd zendure-tibber-steuerung || true
+          python main.py
 
       - name: data.json in main committen
         run: |
+          cd zendure-tibber-steuerung || true
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
           git add data.json
