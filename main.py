@@ -8,20 +8,21 @@ def run():
     try:
         tibber_token = os.environ.get("TIBBER_TOKEN")
         
-        price_val = 43.78  # Standard/Fallback-Preis
-        power_val = 200    # Aktueller Live-Hausverbrauch in Watt
-        status_text = "Aktiv (Live)"
+        price_val = 43.78  # Standard-Preis
+        power_val = 0      # Startwert
+        status_text = "Aktiv (Tibber)"
 
         if not tibber_token:
-            print("Hinweis: TIBBER_TOKEN nicht gefunden, verwende Fallback.")
+            print("Hinweis: TIBBER_TOKEN nicht gefunden.")
+            status_text = "Token fehlt"
         else:
-            print("Starte Tibber-Abfrage für Preis und Live-Daten...")
+            print("Starte Tibber-Abfrage...")
             url = "https://api.tibber.com/v1-beta/gql"
             headers = {
                 "Authorization": f"Bearer {tibber_token}",
                 "Content-Type": "application/json"
             }
-            # Erweiterte Query, die falls verfügbar auch den Live-Verbrauch (power) abfragt
+            # Query für Live-Messwerte (falls vom Tibber Pulse unterstützt)
             query = """
             {
               viewer {
@@ -33,10 +34,8 @@ def run():
                       }
                     }
                   }
-                  consumption(resolution: HOURLY, last: 1) {
-                    nodes {
-                      consumption
-                    }
+                  liveMeasurement {
+                    power
                   }
                 }
               }
@@ -52,13 +51,22 @@ def run():
                         result = json.loads(res_body)
                         homes = result.get('data', {}).get('viewer', {}).get('homes', [])
                         if homes:
-                            current_price = homes[0]['currentSubscription']['priceInfo']['current']['total']
-                            price_val = round(current_price * 100, 2)
-                            print(f"Preis erfolgreich abgerufen: {price_val} Ct")
+                            # Preis auslesen
+                            price_info = homes[0].get('currentSubscription', {}).get('priceInfo', {}).get('current', {})
+                            if price_info and 'total' in price_info:
+                                price_val = round(price_info['total'] * 100, 2)
+                            
+                            # Live-Verbrauch auslesen
+                            live_data = homes[0].get('liveMeasurement')
+                            if live_data and 'power' in live_data:
+                                power_val = live_data['power']
+                                status_text = "Aktiv (Tibber Live)"
+                            
+                            print(f"Abruf erfolgreich: {price_val} Ct, {power_val} W")
             except urllib.error.URLError as e:
-                print(f"Netzwerkfehler bei Tibber: {e}")
+                print(f"Netzwerkfehler: {e}")
+                status_text = "API-Fehler"
 
-        # Daten für die Web-App in die data.json schreiben
         web_data = {
             "price": price_val,
             "power": power_val,
@@ -67,11 +75,11 @@ def run():
         
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
-        print("data.json mit Live-Werten erfolgreich geschrieben.")
+        print("data.json erfolgreich aktualisiert.")
 
     except Exception as e:
-        print(f"Fehler abgefangen: {e}")
-        web_data = {"price": 43.78, "power": 200, "status": "Fallback"}
+        print(f"Fehler: {e}")
+        web_data = {"price": 43.78, "power": 0, "status": "Fehler"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
 
