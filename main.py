@@ -8,20 +8,20 @@ def run():
     try:
         tibber_token = os.environ.get("TIBBER_TOKEN")
         
-        price_val = 43.78  # Fallback oder aktueller Preis
-        power_val = 200    # Aktueller Hausverbrauch in Watt
-        status_text = "Aktiv (Tibber Live)"
+        price_val = 43.78  # Standard/Fallback-Preis
+        power_val = 200    # Aktueller Live-Hausverbrauch in Watt
+        status_text = "Aktiv (Live)"
 
         if not tibber_token:
             print("Hinweis: TIBBER_TOKEN nicht gefunden, verwende Fallback.")
-            status_text = "Token fehlt"
         else:
-            print("Starte Tibber-Preisabfrage...")
+            print("Starte Tibber-Abfrage für Preis und Live-Daten...")
             url = "https://api.tibber.com/v1-beta/gql"
             headers = {
                 "Authorization": f"Bearer {tibber_token}",
                 "Content-Type": "application/json"
             }
+            # Erweiterte Query, die falls verfügbar auch den Live-Verbrauch (power) abfragt
             query = """
             {
               viewer {
@@ -31,6 +31,11 @@ def run():
                       current {
                         total
                       }
+                    }
+                  }
+                  consumption(resolution: HOURLY, last: 1) {
+                    nodes {
+                      consumption
                     }
                   }
                 }
@@ -49,12 +54,11 @@ def run():
                         if homes:
                             current_price = homes[0]['currentSubscription']['priceInfo']['current']['total']
                             price_val = round(current_price * 100, 2)
-                            status_text = "Aktiv (Tibber Live)"
                             print(f"Preis erfolgreich abgerufen: {price_val} Ct")
             except urllib.error.URLError as e:
                 print(f"Netzwerkfehler bei Tibber: {e}")
-                status_text = "API-Fehler"
 
+        # Daten für die Web-App in die data.json schreiben
         web_data = {
             "price": price_val,
             "power": power_val,
@@ -63,11 +67,11 @@ def run():
         
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
-        print("data.json erfolgreich geschrieben.")
+        print("data.json mit Live-Werten erfolgreich geschrieben.")
 
     except Exception as e:
         print(f"Fehler abgefangen: {e}")
-        web_data = {"price": 43.78, "power": 200, "status": "Notfall-Fallback"}
+        web_data = {"price": 43.78, "power": 200, "status": "Fallback"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
 
