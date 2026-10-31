@@ -21,7 +21,6 @@ def run():
                 "Authorization": f"Bearer {tibber_token}",
                 "Content-Type": "application/json"
             }
-            # Nur den sicheren Preis abfragen, um API-Fehler durch fehlenden Pulse zu vermeiden
             query = """
             {
               viewer {
@@ -55,7 +54,6 @@ def run():
             except Exception as api_err:
                 print(f"Tibber API Hinweis: {api_err}")
 
-        # Daten sicher in die data.json schreiben
         web_data = {
             "price": price_val,
             "power": power_val,
@@ -67,7 +65,7 @@ def run():
         print("data.json erfolgreich gespeichert.")
 
     except Exception as e:
-        print(fschwerer Fehler abgefangen: {e}")
+        print(f"Fehler abgefangen: {e}")
         web_data = {"price": 43.78, "power": 200, "status": "Notfall-Fallback"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
