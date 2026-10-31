@@ -21,9 +21,6 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Abhängigkeiten installieren
-        run: pip install requests
-
       - name: Hauptskript ausführen
         env:
           TIBBER_TOKEN: ${{ secrets.TIBBER_TOKEN }}
