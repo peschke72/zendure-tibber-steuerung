@@ -9,8 +9,8 @@ def run():
         tibber_token = os.environ.get("TIBBER_TOKEN")
         
         price_val = 43.78  
-        power_val = 200    # Standardwert als Fallback
-        status_text = "Aktiv (Stabil)"
+        power_val = 0      # Startwert
+        status_text = "Aktiv (Tibber)"
 
         if not tibber_token:
             print("TIBBER_TOKEN nicht gefunden, verwende Fallback.")
@@ -21,7 +21,8 @@ def run():
                 "Authorization": f"Bearer {tibber_token}",
                 "Content-Type": "application/json"
             }
-            # Abfrage für Preis und Live-Verbrauch mit Fehlertoleranz
+            
+            # Abfrage für Preis und den letzten Verbrauchswert
             query = """
             {
               viewer {
@@ -33,8 +34,10 @@ def run():
                       }
                     }
                   }
-                  liveMeasurement {
-                    power
+                  consumption(resolution: HOURLY, last: 1) {
+                    nodes {
+                      consumption
+                    }
                   }
                 }
               }
@@ -55,17 +58,18 @@ def run():
                             if price_info and price_info.get('total') is not None:
                                 price_val = round(price_info['total'] * 100, 2)
                             
-                            # Live-Verbrauch sicher auslesen (falls vorhanden)
-                            live_data = homes[0].get('liveMeasurement')
-                            if live_data and live_data.get('power') is not None:
-                                power_val = live_data['power']
-                                status_text = "Aktiv (Tibber Live)"
+                            # Letzten Verbrauch auslesen (in kWh, umgerechnet in Watt oder als Basis)
+                            consumption_nodes = homes[0].get('consumption', {}).get('nodes', [])
+                            if consumption_nodes and consumption_nodes[0].get('consumption') is not None:
+                                kwh = consumption_nodes[0]['consumption']
+                                # Da HOURLY-Verbrauch in kWh pro Stunde vorliegt, entspricht das dem Durchschnitt in kW -> in Watt umrechnen
+                                power_val = int(kwh * 1000)
+                                status_text = "Aktiv (Tibber)"
                             
-                            print(f"Abruf erfolgreich: {price_val} Ct, {power_val} W")
+                            print(f"Abruf erfolgreich: {price_val} Ct, ~{power_val} W")
             except Exception as api_err:
-                print(f"Tibber API Hinweis (verwende Fallback): {api_err}")
+                print(f"Tibber API Hinweis: {api_err}")
 
-        # Daten sicher in die data.json schreiben
         web_data = {
             "price": price_val,
             "power": power_val,
@@ -78,7 +82,7 @@ def run():
 
     except Exception as e:
         print(f"Fehler abgefangen: {e}")
-        web_data = {"price": 43.78, "power": 200, "status": "Notfall-Fallback"}
+        web_data = {"price": 43.78, "power": 0, "status": "Fallback"}
         with open("data.json", "w", encoding="utf-8") as f:
             json.dump(web_data, f)
 
