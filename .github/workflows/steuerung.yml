@@ -3,16 +3,18 @@ name: Zendure Tibber Steuerung
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *' # Läuft stündlich
+    - cron: '0 * * * *'
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Erlaubt das Speichern von Dateien im Repository
+      contents: write
     steps:
       - name: Repository auschecken
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Python einrichten
         uses: actions/setup-python@v5
@@ -29,16 +31,10 @@ jobs:
           ZENDURE_PASSWORD: ${{ secrets.ZENDURE_PASSWORD }}
         run: python main.py
 
-      - name: Prüfen und data.json committen
+      - name: data.json in main committen
         run: |
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
-          
-          # Prüfen, ob data.json existiert, falls nicht eine Dummy-Datei erstellen
-          if [ ! -f data.json ]; then
-            echo '{"price": 0, "power": 0, "status": "Initialisierung"}' > data.json
-          fi
-          
           git add data.json
-          git commit -m "Automatisches Update der data.json [skip ci]" || echo "Keine Änderungen zum Speichern"
-          git push origin main || git push
+          git commit -m "Update data.json automatisch [skip ci]" || echo "Keine Änderungen zum Committen"
+          git push origin main
