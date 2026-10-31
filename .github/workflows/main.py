@@ -5,7 +5,7 @@ import requests
 def run():
     tibber_token = os.environ.get("TIBBER_TOKEN")
     
-    price_val = 24.50  # Fallback-Wert, falls die API nicht erreichbar ist
+    price_val = 24.50
     status_text = "Verbunden"
 
     if not tibber_token:
@@ -43,12 +43,11 @@ def run():
                     current_price = homes[0]['currentSubscription']['priceInfo']['current']['total']
                     price_val = round(current_price * 100, 2)
                     status_text = "Aktiv (Tibber Live)"
-                    print(Preis erfolgreich abgerufen: {price_val} Ct)
+                    print("Preis erfolgreich abgerufen")
         except Exception as e:
             print(f"Fehler bei der Abfrage: {e}")
             status_text = "API-Fehler"
 
-    # In jedem Fall die data.json schreiben, damit die Webseite Daten hat
     web_data = {
         "price": price_val,
         "power": 0,
